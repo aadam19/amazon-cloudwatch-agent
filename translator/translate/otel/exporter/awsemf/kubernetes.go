@@ -255,12 +255,17 @@ func getDaemonSetMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.Metric
 }
 
 func getNamespaceMetricDeclarations() []*awsemfexporter.MetricDeclaration {
+	metricNameSelectors := []string{"namespace_number_of_running_pods"}
+	metricNameSelectors = append(metricNameSelectors, "pvc_count")
+	// enhancedContainerInsightsEnabled := awscontainerinsight.EnhancedContainerInsightsEnabled(conf)
+	// if enhancedContainerInsightsEnabled {
+	// 	metricNameSelectors = append(metricNameSelectors, "pvc_count")
+	// }
+
 	return []*awsemfexporter.MetricDeclaration{
 		{
-			Dimensions: [][]string{{"Namespace", "ClusterName"}, {"ClusterName"}},
-			MetricNameSelectors: []string{
-				"namespace_number_of_running_pods",
-			},
+			Dimensions:          [][]string{{"Namespace", "ClusterName"}, {"ClusterName"}},
+			MetricNameSelectors: metricNameSelectors,
 		},
 	}
 }
@@ -271,6 +276,7 @@ func getClusterMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.MetricDe
 	enhancedContainerInsightsEnabled := awscontainerinsight.EnhancedContainerInsightsEnabled(conf)
 	if enhancedContainerInsightsEnabled {
 		metricNameSelectors = append(metricNameSelectors, "cluster_number_of_running_pods")
+		metricNameSelectors = append(metricNameSelectors, "pvc_count")
 	}
 
 	return []*awsemfexporter.MetricDeclaration{
