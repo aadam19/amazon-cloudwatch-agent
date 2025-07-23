@@ -56,6 +56,8 @@ func setKubernetesMetricDeclaration(conf *confmap.Conf, cfg *awsemfexporter.Conf
 
 	kubernetesMetricDeclarations = append(kubernetesMetricDeclarations, getEBSMetricDeclarations(conf)...)
 
+	kubernetesMetricDeclarations = append(kubernetesMetricDeclarations, getVolumesMetricDeclarations(conf)...)
+
 	cfg.MetricDeclarations = kubernetesMetricDeclarations
 	cfg.MetricDescriptors = getControlPlaneMetricDescriptors(conf)
 
@@ -256,11 +258,6 @@ func getDaemonSetMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.Metric
 
 func getNamespaceMetricDeclarations() []*awsemfexporter.MetricDeclaration {
 	metricNameSelectors := []string{"namespace_number_of_running_pods"}
-	metricNameSelectors = append(metricNameSelectors, "pvc_count")
-	// enhancedContainerInsightsEnabled := awscontainerinsight.EnhancedContainerInsightsEnabled(conf)
-	// if enhancedContainerInsightsEnabled {
-	// 	metricNameSelectors = append(metricNameSelectors, "pvc_count")
-	// }
 
 	return []*awsemfexporter.MetricDeclaration{
 		{
@@ -276,7 +273,6 @@ func getClusterMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.MetricDe
 	enhancedContainerInsightsEnabled := awscontainerinsight.EnhancedContainerInsightsEnabled(conf)
 	if enhancedContainerInsightsEnabled {
 		metricNameSelectors = append(metricNameSelectors, "cluster_number_of_running_pods")
-		metricNameSelectors = append(metricNameSelectors, "pvc_count")
 	}
 
 	return []*awsemfexporter.MetricDeclaration{
@@ -678,6 +674,32 @@ func getEBSMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.MetricDeclar
 					"node_diskio_ebs_ec2_instance_performance_exceeded_iops",
 					"node_diskio_ebs_ec2_instance_performance_exceeded_tp",
 					"node_diskio_ebs_volume_queue_length",
+				},
+			},
+		}
+	}
+	return metricDeclarations
+}
+
+func getVolumesMetricDeclarations(conf *confmap.Conf) []*awsemfexporter.MetricDeclaration {
+	var metricDeclarations []*awsemfexporter.MetricDeclaration
+	if awscontainerinsight.EnhancedContainerInsightsEnabled(conf) {
+		metricDeclarations = []*awsemfexporter.MetricDeclaration{
+			{
+				Dimensions: [][]string{
+					{"ClusterName", "Namespace"},
+				},
+				MetricNameSelectors: []string{
+					"number_of_persistent_volume_claims",
+				},
+			},
+			{
+				Dimensions: [][]string{
+					{"ClusterName"},
+				},
+				MetricNameSelectors: []string{
+					"number_of_persistent_volume_claims",
+					"number_of_persistent_volumes",
 				},
 			},
 		}
